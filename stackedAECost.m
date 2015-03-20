@@ -1,0 +1,63 @@
+function [ cost, grad ] = stackedAECost(stackedAETheta,netconfig,datai, datao)
+% stackedAECost: Takes a trained NN and a training data datai set with output data0,
+% and returns cost and gradient using a stacked autoencoder model. Used for
+% finetuning.
+% stackedAETheta: trained weights from all layers of the NN
+% netconfig:   the network configuration of the stack
+% data: Our matrix containing the training data as columns.  So, data(:,i) is the i-th training example. 
+% labels: A vector containing labels, where labels(i) is the label for the
+% i-th training example
+%% Unroll  parameters
+%layer 1, autoencoder
+visibleSizeAE=netconfig.L1(1);
+hiddenSizeAE =netconfig.L1(2);
+%layer 2, actually there are two layers in this "layer 2", the second
+%autoencoder and the output layer
+inputSize=netconfig.L2(1); hiddenSize=netconfig.L2(2); outputSize=netconfig.L2(3);
+ne1=netconfig.the1;
+theta1=stackedAETheta(1:ne1);
+theta2=stackedAETheta(ne1+1:end);
+
+W1 = reshape(theta1(1:hiddenSizeAE*visibleSizeAE), hiddenSizeAE, visibleSizeAE);
+b1 = theta1(hiddenSizeAE*visibleSizeAE+1:end);
+
+W2 = reshape(theta2(1:hiddenSize*inputSize), hiddenSize, inputSize);
+W3 = reshape(theta2(hiddenSize*inputSize+1:hiddenSize*inputSize+hiddenSize*outputSize), outputSize, hiddenSize);
+b2 = theta2(hiddenSize*inputSize+hiddenSize*outputSize+1:hiddenSize*inputSize+hiddenSize*outputSize+hiddenSize);
+b3 = theta2(hiddenSize*inputSize+hiddenSize*outputSize+hiddenSize+1:end);
+
+M = size(datai, 2);
+%% forward
+a2 =sigmoid(bsxfun(@plus, W1*datai, b1));%features 1
+a3 =sigmoid(bsxfun(@plus, W2*a2, b2));   %features 2
+%a4 =sigmoid(W3*a3+repmat(b3,1,M));   %output
+a4 =bsxfun(@plus, W3*a3, b3);% W3*a3+repmat(b3,1,M);   %output
+
+cost=1/M*sum(1/2*sum((a4-datao).^2));
+%% backward
+delta_4=-(datao-a4); %-(datao-a4).*(a4.*(1-a4));  %output as sigmoid or linear
+delta_3=(W3'*delta_4).*(a3.*(1-a3));
+delta_2=(W2'*delta_3).*(a2.*(1-a2));
+
+W1grad=delta_2*datai';
+W2grad=delta_3*a2';
+W3grad=delta_4*a3';
+
+W1grad=1/M*W1grad;
+W2grad=1/M*W2grad;
+W3grad=1/M*W3grad;
+
+b1grad=1/M*sum(delta_2,2);
+b2grad=1/M*sum(delta_3,2);
+b3grad=1/M*sum(delta_4,2);
+% -------------------------------------------------------------------------
+%% Roll gradient vector [layer 1 ; layer 2]
+grad =  [W1grad(:); b1grad; W2grad(:); W3grad(:); b2grad; b3grad];
+
+end
+
+
+% You might find this useful
+function sigm = sigmoid(x)
+    sigm = 1 ./ (1 + exp(-x));
+end
