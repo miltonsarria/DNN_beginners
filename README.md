@@ -1,3 +1,9 @@
 # DNN_beginners
-This is an implementation of autoencoders and softmax classification based system 
+This is an implementation of autoencoders and a softmax classification based system 
 all the code is based based on the tutorial: http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial
+to run the basic example you have to open demo_train_sparse_Autoencoder.m
+to run the staked auto encoder exercise you have to open demo_stakedAEExercise_mnistImages.m
+I'm implementing some other functions to do mappings from X domain to Y domain, and also to do the
+training using parallel tools of matlab
+again see the tutorial of professor  Andrew Y. Ng for details
+http://ufldl.stanford.edu/wiki/index.php/UFLDL_Tutorial

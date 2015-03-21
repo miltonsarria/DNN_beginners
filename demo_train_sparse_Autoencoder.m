@@ -3,7 +3,8 @@
 clear all
 clc
 close all
-
+addpath minFunc/
+addpath mnistHelper/
 visibleSize = 8*8;   % number of input units 
 hiddenSize = 25;     % number of hidden units 
 sparsityParam = 0.01;% desired average activation of the hidden units.
@@ -22,7 +23,6 @@ display_network(patches(:,randi(size(patches,2),200,1)),8);
 %  Randomly initialize the parameters
 theta = initializeParameters(hiddenSize, visibleSize);
 %  Use minFunc to minimize the function
-addpath minFunc/
 options.Method = 'lbfgs'; % Here, we use L-BFGS to optimize our cost
                           % function. Generally, for minFunc to work, you
                           % need a function pointer with two outputs: the
